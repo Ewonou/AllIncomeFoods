@@ -28,12 +28,21 @@
 
 - (id)initWithDictionary:(NSDictionary *)dictionary
 {
+    /*
     NSString *street = [dictionary valueForKey:@"street"];
     NSString *city = [dictionary valueForKey:@"city"];
     NSString *state = [dictionary valueForKey:@"state"];
     NSString *zip = [dictionary valueForKey:@"zip"];
     NSNumber *lat = [dictionary valueForKey:@"lat"];
     NSNumber *lon = [dictionary valueForKey:@"lon"];
+     */
+    
+    NSString *street = [dictionary valueForKey:@"ADDRESS"];
+    NSString *city = [dictionary valueForKey:@"CITY"];
+    NSString *state = [dictionary valueForKey:@"STATE"];
+    NSString *zip = [dictionary valueForKey:@"ZIP5"];
+    NSNumber *lat = [dictionary valueForKey:@"latitude"];
+    NSNumber *lon = [dictionary valueForKey:@"longitude"];
     
     // Create the address dictionary
     NSDictionary *addressDictionary = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -49,7 +58,8 @@
     
     if (self)
     {
-        _name = [dictionary valueForKey:@"name"];
+        //_name = [dictionary valueForKey:@"name"];
+        _name = [dictionary valueForKey:@"STORE_NAME"];
         _address = ABCreateStringWithAddressDictionary(self.addressDictionary, NO);
         _distance = [dictionary valueForKey:@"distance"];
     }

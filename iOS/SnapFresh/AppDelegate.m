@@ -39,6 +39,10 @@
     // Configure RestKit client
     [RKClient clientWithBaseURLString:kSnapFreshBaseURL];
     [[RKClient sharedClient] setTimeoutInterval:kSnapFreshTimeout];
+    //[[RKClient sharedClient] setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    
+    Class<RKParser> parser = [[RKParserRegistry sharedRegistry] parserClassForMIMEType:@"application/json"];
+    [[RKParserRegistry sharedRegistry] setParserClass:parser forMIMEType:@"text/plain"];
 
     UIColor *color = [UIColor colorWithRed:0.39 green:0.60 blue:0.2 alpha:1.0];
     

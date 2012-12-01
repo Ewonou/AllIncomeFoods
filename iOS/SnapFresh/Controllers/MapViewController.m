@@ -203,7 +203,7 @@
     {
         NSString *address = mapView.userLocation.subtitle;
         self.searchBar.text = address;
-        [self setAnnotationsForCoordinate:coordinate];
+        //[self setAnnotationsForCoordinate:coordinate];
     }
 }
 
@@ -281,7 +281,7 @@
          NSString *searchAddress = ABCreateStringWithAddressDictionary(topResult.addressDictionary, NO);
 
          self.searchBar.text = searchAddress;
-         [self setAnnotationsForCoordinate:topResult.location.coordinate];
+         [self setAnnotationsForPlacemark:topResult];
 
          // Create an annotation from the placemark
          MKPointAnnotation *searchAnnotation = [[MKPointAnnotation alloc] init];
@@ -383,7 +383,7 @@
         // Update the searchBar text
         self.searchBar.text = searchAddress;
         
-        [self setAnnotationsForCoordinate:topResult.location.coordinate];
+        [self setAnnotationsForPlacemark:topResult];
         
         // Create an annotation from the placemark
         MKPointAnnotation *annotation = [[MKPointAnnotation alloc] init];
@@ -397,14 +397,24 @@
 
 #pragma mark - Send SnapFresh request
 
-- (void)sendRequestForCoordinate:(CLLocationCoordinate2D)coordinate
+- (void)sendRequestForPlacemark:(CLPlacemark *)placemark
 {
     UIApplication *app = [UIApplication sharedApplication];
     app.networkActivityIndicatorVisible = YES;
+
+    NSString *resourcePath = nil;
     
-    // Set up our resource path
-    NSString *address = [NSString stringWithFormat:@"%f,%f", coordinate.latitude, coordinate.longitude];
-    NSString *resourcePath = [NSString stringWithFormat:@"%@?address=%@", kSnapFreshEndpoint, address];
+    if (placemark.postalCode)
+    {
+        // Set up our resource path
+        resourcePath = [NSString stringWithFormat:@"%@?searchText=%@&contains=true&searchFields=ZIP5&sr=&layers=0&layerdefs=&returnGeometry=false&maxAllowableOffset=&f=json", kSnapFreshEndpoint, placemark.postalCode];
+    }
+    else
+    {
+        resourcePath = [NSString stringWithFormat:@"%@?searchText=%@&contains=true&searchFields=CITY&sr=&layers=0&layerdefs=&returnGeometry=false&maxAllowableOffset=&f=json", kSnapFreshEndpoint, placemark.locality];
+    }
+    
+    resourcePath = [NSString stringWithFormat:@"%@?text=Burlingame+CA&contains=true&searchFields=CITY&sr=&layers=0&layerdefs=&returnGeometry=false&maxAllowableOffset=&f=json", kSnapFreshEndpoint];
     
     // Set up our request
     RKRequest *request = [[RKClient sharedClient] requestWithResourcePath:resourcePath];
@@ -420,11 +430,10 @@
     app.networkActivityIndicatorVisible = NO;
     
     [SVProgressHUD dismiss];
-    
-    NSError *error = nil;
 
-    if ([response isSuccessful] && [response isJSON])
-    {
+    //if ([response isSuccessful] && [response isJSON])
+    //{
+        NSError *error = nil;
         NSDictionary *jsonDictionary = [response parsedBody:&error];
         
         [self parseJSONResponse:jsonDictionary];
@@ -444,7 +453,7 @@
             // Notify our delegate that the map has new annotations.
             [delegate annotationsDidLoad:self.retailers];
         }
-    }
+    //}
 }
 
 - (void)request:(RKRequest *)request didFailLoadWithError:(NSError *)error
@@ -460,29 +469,29 @@
 - (void)parseJSONResponse:(NSDictionary *)jsonResponse
 {
     // Get the JSON array of retailers
-    NSArray *retailersJSON = [jsonResponse valueForKey:@"retailers"];
+    NSArray *retailersJSON = [jsonResponse valueForKeyPath:@"results"];
     
     NSMutableArray *_retailers = [NSMutableArray array];
     
-    for (NSDictionary *jsonDictionary in retailersJSON)
+    for (NSDictionary *retailerDictionary in retailersJSON)
     {
         // Get the JSON dictionary of a retailer
-        NSDictionary *retailerDictionary = [jsonDictionary objectForKey:@"retailer"];
-        SnapRetailer *retailer = [[SnapRetailer alloc] initWithDictionary:retailerDictionary];
+        NSDictionary *attributesDictionary = [retailerDictionary objectForKey:@"attributes"];
+        SnapRetailer *retailer = [[SnapRetailer alloc] initWithDictionary:attributesDictionary];
         [_retailers addObject:retailer];
     }
     
     self.retailers = [NSArray arrayWithArray:_retailers];
 }
 
-- (void)setAnnotationsForCoordinate:(CLLocationCoordinate2D)coordinate
+- (void)setAnnotationsForPlacemark:(CLPlacemark *)placemark
 {
     NSString *status = NSLocalizedString(@"Finding SNAP retailers", @"Finding SNAP retailers");
     [SVProgressHUD showWithStatus:status];
 
     [self clearMapAnnotations];
     
-    [self sendRequestForCoordinate:coordinate];
+    [self sendRequestForPlacemark:placemark];
 }
 
 #pragma mark - Update the visible map rectangle
@@ -625,7 +634,7 @@
          // Set the map's region if it's not set
          if (didSetRegion == NO)
          {
-             [self setAnnotationsForCoordinate:topResult.location.coordinate];
+             [self setAnnotationsForPlacemark:topResult];
              
              didSetRegion = YES;
          }

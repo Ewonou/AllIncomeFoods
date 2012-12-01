@@ -7,10 +7,10 @@
 //
 
 // SnapFresh API base URL
-NSString * const kSnapFreshBaseURL = @"http://snapfresh.org";
+NSString * const kSnapFreshBaseURL = @"http://www.snapretailerlocator.com";
 
 // SnapFresh API endpoint
-NSString * const kSnapFreshEndpoint = @"/retailers/nearaddy.json/";
+NSString * const kSnapFreshEndpoint = @"/ArcGIS/rest/services/retailer/MapServer/find";
 
 // SnapFresh timeout interval
 NSTimeInterval const kSnapFreshTimeout = 10.0;
